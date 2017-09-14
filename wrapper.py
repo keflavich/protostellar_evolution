@@ -4,6 +4,9 @@ import shutil
 
 def write_params(mdot=1e-4, timestep=100):
 
+    fulltime = 100 / mdot
+    timestep = fulltime / 1000
+
     with open('Driver.F90', 'r') as fh:
         lines = fh.readlines()
 
@@ -14,6 +17,8 @@ def write_params(mdot=1e-4, timestep=100):
                 fh.write("    mdot = {0:E} * Msun / secyr\n".format(mdot))
             elif line[4:8] == 'dt =':
                 fh.write("    dt = {0:f} * secyr\n".format(timestep))
+            elif line[4:13] == 'maxtime =':
+                fh.write("    maxtime = {0:E} * secyr\n".format(fulltime))
             else:
                 fh.write(line)
 
