@@ -12,7 +12,7 @@
 !
 !*******************************************************************************
 
-program Driver
+program TurbulentCoreDriver
 
     use protostellar_interface, only: star, Msun, Rsun, secyr
 
@@ -21,9 +21,10 @@ program Driver
     double precision :: dt
     double precision :: mdot
     double precision :: time, maxtime
+    double precision :: mfinal, mdot1, tf1, tf
 
     ! Initialize our star
-    star%mass   = 0.0
+    star%mass   = 0.01 ! need to start with some initial mass to set accr. rate
     star%mdot   = 0.0
     star%radius = 0.0
     star%polyn  = 0.0
@@ -32,8 +33,16 @@ program Driver
     star%lum    = 0.0
     star%stage  = 0
 
-    ! Set the accretion rate (grams per second)
-    mdot = 1.000000E-06 * Msun / secyr
+    ! set the final mass, which determines the accretion rate etc. below
+    mfinal = 1.0
+
+    ! compute tfinal from mfinal
+    mdot1 = 4.9e-6 ! normalized by surface density^3/4
+    tf1 = 2./mdot1
+    tf = tf1 * mfinal**(0.25)
+
+    ! Set the initial accretion rate (grams per second)
+    mdot = mdot1 * (star%mass/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
     star%mdot = mdot
 
     ! Set the timestep (seconds)
@@ -41,10 +50,10 @@ program Driver
 
     ! Initialize the simulation time and set the maxtime
     time = 0.0
-    maxtime = 1.000000E+08 * secyr
+    maxtime = tf * secyr
 
     ! Open file for writing
-    open(unit=1, file="protostellar_evolution.txt", action="write")
+    open(unit=1, file="turbulentcore_protostellar_evolution.txt", action="write")
     write(1,FMT=101) 'Time','Stellar Mass','Accretion Rate','Stellar Radius','Polytropic Index',&
                      'Deuterium Mass','Intrinsic Lum','Total Luminosity','Stage'
 
@@ -52,6 +61,11 @@ program Driver
     do while(time < maxtime)
         call EvolveProtostellar(dt)
         star%mass = star%mass + star%mdot*dt
+
+        ! update the mass accretion rate
+        mdot = mdot1 * (star%mass/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
+        star%mdot = mdot
+
         time = time + dt
         write(1,FMT=100) time, star%mass, star%mdot, star%radius, &
                         & star%polyn, star%mdeut, star%lint, &

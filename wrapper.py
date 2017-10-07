@@ -2,9 +2,11 @@ import numpy as np
 import os
 import shutil
 
-def write_params(mdot=1e-4, timestep=100):
+def write_params(mdot=1e-4, timestep=100, fulltime=None, mf=100):
 
-    fulltime = 100 / mdot
+    if fulltime is None:
+        fulltime = mf / mdot
+
     timestep = fulltime / 1000
 
     with open('Driver.F90', 'r') as fh:
@@ -29,9 +31,21 @@ def run_code():
     os.system('./protostellar_evolution')
 
 
+def isothermal_sphere(mf, T=10):
+    T1 = (T/10)
+    mdot1 = 1.54e-6 * T1**1.5 # msun/yr
+    mdot = mdot1
+
+    # years
+    tf1 = (1/mdot1)
+    tf = tf1 * mf
+    
+    write_params(mdot=mdot, fulltime=tf, mf=mf)
+
+
 if __name__ == "__main__":
 
-    for mdot in np.logspace(-6, -2, 12):
+    for mdot in [1e-3, 3e-3, 1e-4, 1e-5, 1e-6]:
         os.system('git checkout 8cb810f -- Driver.F90')
         write_params(mdot=mdot)
         compile_code()
