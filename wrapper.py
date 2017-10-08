@@ -72,6 +72,44 @@ def tc_write_params(ntimestep=1000, fulltime=None, mf=100):
             else:
                 fh.write(line)
 
+def assemble_model_grid(prefix='turbulentcore_protostellar_evolution_m',
+                        masses=(0.1,0.5,1,5,10,50), ntime=1000):
+
+    from astropy.table import Table
+    from astropy.io import fits
+
+    grid = np.empty([len(masses), ntime, 9])
+
+    for ii,mf in enumerate(masses):
+        fn = "turbulentcore_protostellar_evolution_m={0}.txt".format(mf)
+        tbl = Table.read(fn, format='ascii')
+
+        grid[ii,:,0] = tbl['Time']
+        grid[ii,:,1] = tbl['Stellar_Mass']
+        grid[ii,:,2] = tbl['Accretion_Rate']
+        grid[ii,:,3] = tbl['Stellar_Radius']
+        grid[ii,:,4] = tbl['Polytropic_Index']
+        grid[ii,:,5] = tbl['Deuterium_Mass']
+        grid[ii,:,6] = tbl['Intrinsic_Lum']
+        grid[ii,:,7] = tbl['Total_Luminosity']
+        grid[ii,:,8] = tbl['Stage']
+
+
+    hdr = fits.Header()
+    hdr['COL0'] = 'Time'
+    hdr['COL1'] = 'Stellar_Mass'
+    hdr['COL2'] = 'Accretion_Rate'
+    hdr['COL3'] = 'Stellar_Radius'
+    hdr['COL4'] = 'Polytropic_Index'
+    hdr['COL5'] = 'Deuterium_Mass'
+    hdr['COL6'] = 'Intrinsic_Lum'
+    hdr['COL7'] = 'Total_Luminosity'
+    hdr['COL8'] = 'Stage'
+
+    fits.writeto(filename='turbulent_grid.fits', data=grid, header=hdr)
+
+
+
 
 if __name__ == "__main__":
 
@@ -86,7 +124,7 @@ if __name__ == "__main__":
     
     for mf in (0.1,0.5,1,5,10,50):
         os.system('git checkout cc6cf07 -- TurbulentCoreDriver.F90')
-        tc_write_params(mf=mf, fulltime=None)
+        tc_write_params(mf=mf, fulltime=2e6)
         compile_code('turbulentcore')
         run_code('tc_protostellar_evolution')
         shutil.move("turbulentcore_protostellar_evolution.txt",
