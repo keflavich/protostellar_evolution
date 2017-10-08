@@ -24,11 +24,11 @@ def write_params(mdot=1e-4, timestep=100, fulltime=None, mf=100):
             else:
                 fh.write(line)
 
-def compile_code():
-    os.system('make')
+def compile_code(program='all'):
+    os.system('make {0}'.format(program))
 
-def run_code():
-    os.system('./protostellar_evolution')
+def run_code(code='protostellar_evolution'):
+    os.system('./{0}'.format(code))
 
 
 def isothermal_sphere(mf, T=10):
@@ -41,6 +41,28 @@ def isothermal_sphere(mf, T=10):
     tf = tf1 * mf
     
     write_params(mdot=mdot, fulltime=tf, mf=mf)
+
+def tc_write_params(timestep=100, fulltime=None, mf=100):
+
+    if fulltime is None:
+        fulltime = mf / mdot
+    if fulltime < 2:
+        fulltime = 2
+
+    timestep = fulltime / 1000
+
+    with open('TurbulentCoreDriver.F90', 'r') as fh:
+        lines = fh.readlines()
+
+    with open('TurbulentCoreDriver.F90', 'w') as fh:
+
+        for line in lines:
+            if line[4:8] == 'dt =':
+                fh.write("    dt = {0:f} * secyr\n".format(timestep))
+            elif line[4:13] == 'maxtime =':
+                fh.write("    maxtime = {0:E} * secyr\n".format(fulltime))
+            else:
+                fh.write(line)
 
 
 if __name__ == "__main__":

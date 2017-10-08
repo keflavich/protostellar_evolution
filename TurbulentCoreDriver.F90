@@ -24,7 +24,7 @@ program TurbulentCoreDriver
     double precision :: mfinal, mdot1, tf1, tf
 
     ! Initialize our star
-    star%mass   = 0.01 ! need to start with some initial mass to set accr. rate
+    star%mass   = 0.001 * Msun ! need to start with some initial mass to set accr. rate
     star%mdot   = 0.0
     star%radius = 0.0
     star%polyn  = 0.0
@@ -42,29 +42,37 @@ program TurbulentCoreDriver
     tf = tf1 * mfinal**(0.25)
 
     ! Set the initial accretion rate (grams per second)
-    mdot = mdot1 * (star%mass/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
+    mdot = mdot1 * (star%mass/Msun/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
     star%mdot = mdot
 
     ! Set the timestep (seconds)
-    dt = 100000.000000 * secyr
+    dt = 1000.000000 * secyr
 
     ! Initialize the simulation time and set the maxtime
     time = 0.0
     maxtime = tf * secyr
+    maxtime = 2e6 * secyr
 
     ! Open file for writing
     open(unit=1, file="turbulentcore_protostellar_evolution.txt", action="write")
-    write(1,FMT=101) 'Time','Stellar Mass','Accretion Rate','Stellar Radius','Polytropic Index',&
-                     'Deuterium Mass','Intrinsic Lum','Total Luminosity','Stage'
+    write(1,FMT=101) 'Time','Stellar_Mass','Accretion_Rate','Stellar_Radius','Polytropic_Index',&
+                     'Deuterium_Mass','Intrinsic_Lum','Total_Luminosity','Stage'
 
     ! Evolve the star
     do while(time < maxtime)
         call EvolveProtostellar(dt)
         star%mass = star%mass + star%mdot*dt
 
-        ! update the mass accretion rate
-        mdot = mdot1 * (star%mass/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
-        star%mdot = mdot
+        !if (time < tf * secyr) then
+        if (star%mass/Msun < mfinal) then
+            ! update the mass accretion rate
+            mdot = mdot1 * (star%mass/Msun/mfinal)**0.5 * mfinal**0.75 * Msun / secyr
+            star%mdot = mdot
+        else
+            ! stop accretion once target time (mass) has been hit
+            star%mdot = 0
+        endif
+        
 
         time = time + dt
         write(1,FMT=100) time, star%mass, star%mdot, star%radius, &
@@ -81,4 +89,4 @@ program TurbulentCoreDriver
     100 format (8(E17.10,3X),I6)
     101 format (8(A17,3X),A6)
 
-end program Driver
+end program TurbulentCoreDriver

@@ -22,8 +22,26 @@ all: Driver.o EvolveProtostellar.o \
 			 update_stage.o -o protostellar_evolution
 	@echo 'Success.'
 
+turbulentcore: TurbulentCoreDriver.o EvolveProtostellar.o \
+	protostellar_interface.o \
+	get_beta_table.o get_derived_values.o \
+	interp2dlin.o update_D_mass.o \
+	update_luminosity.o update_radius.o \
+	update_stage.o
+	@echo 'Compiling protostellar evolution code...'
+	$(FC) $(CFLAGS) TurbulentCoreDriver.o EvolveProtostellar.o \
+		     protostellar_interface.o \
+			 get_beta_table.o get_derived_values.o \
+			 interp2dlin.o update_D_mass.o \
+			 update_luminosity.o update_radius.o \
+			 update_stage.o -o tc_protostellar_evolution
+	@echo 'Success.'
+
 EvolveProtostellar.o : protostellar_interface.o 
 	$(FC) $(CFLAGS) -c EvolveProtostellar.F90
+
+TurbulentCoreDriver.o : TurbulentCoreDriver.F90 EvolveProtostellar.o
+	$(FC) $(CFLAGS) -c TurbulentCoreDriver.F90
 
 Driver.o : Driver.F90 EvolveProtostellar.o
 	$(FC) $(CFLAGS) -c Driver.F90
