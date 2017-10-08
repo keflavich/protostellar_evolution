@@ -34,7 +34,7 @@ program TurbulentCoreDriver
     star%stage  = 0
 
     ! set the final mass, which determines the accretion rate etc. below
-    mfinal = 1.0
+    mfinal = 5.000000E+01
 
     ! compute tfinal from mfinal
     mdot1 = 4.9e-6 ! normalized by surface density^3/4
@@ -46,12 +46,11 @@ program TurbulentCoreDriver
     star%mdot = mdot
 
     ! Set the timestep (seconds)
-    dt = 1000.000000 * secyr
+    dt = 1085.366510 * secyr
 
     ! Initialize the simulation time and set the maxtime
     time = 0.0
-    maxtime = tf * secyr
-    maxtime = 2e6 * secyr
+    maxtime = 1.0e+06 * secyr
 
     ! Open file for writing
     open(unit=1, file="turbulentcore_protostellar_evolution.txt", action="write")
