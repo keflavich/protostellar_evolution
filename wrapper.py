@@ -49,11 +49,11 @@ def tc_write_params(ntimestep=1000, fulltime=None, mf=100):
         mdot1 = 4.9e-6 # normalized by surface density^3/4
         tf1 = 2./mdot1/1e6 # Myr
         tf = tf1 * mf**(0.25)
-        fulltime = tf
-        print("time to accrete {0} msun in tc model = {1}".format(mf, tf))
+        fulltime = tf*1e6
+        print("time to accrete {0} msun in tc model = {1} Myr".format(mf, tf))
 
-    if fulltime < 2:
-        fulltime = 2
+    if fulltime < 2e6:
+        fulltime = 2e6
 
     timestep = fulltime / ntimestep
 
@@ -85,9 +85,9 @@ if __name__ == "__main__":
                         "protostellar_evolution_mdot={0}.txt".format(mdot))
     
     for mf in (0.1,0.5,1,5,10,50):
-        os.system('git checkout 91c08761d5d6b9bc906c9b4081fc2bcb56405f26 -- TurbulentCoreDriver.F90')
+        os.system('git checkout cc6cf07 -- TurbulentCoreDriver.F90')
         tc_write_params(mf=mf, fulltime=None)
         compile_code('turbulentcore')
         run_code('tc_protostellar_evolution')
         shutil.move("turbulentcore_protostellar_evolution.txt",
-                    "turbulentcore_protostellar_evolution_mdot={0}.txt".format(mf))
+                    "turbulentcore_protostellar_evolution_m={0}.txt".format(mf))

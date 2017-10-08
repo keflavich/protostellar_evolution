@@ -46,11 +46,11 @@ program TurbulentCoreDriver
     star%mdot = mdot
 
     ! Set the timestep (seconds)
-    dt = 1085.366510 * secyr
+    dt = 2000.000000 * secyr
 
     ! Initialize the simulation time and set the maxtime
     time = 0.0
-    maxtime = 1.0e+06 * secyr
+    maxtime = 2.000000E+06 * secyr
 
     ! Open file for writing
     open(unit=1, file="turbulentcore_protostellar_evolution.txt", action="write")
