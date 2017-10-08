@@ -2,12 +2,12 @@ import numpy as np
 import os
 import shutil
 
-def write_params(mdot=1e-4, timestep=100, fulltime=None, mf=100):
+def write_params(mdot=1e-4, ntimestep=1000, fulltime=None, mf=100):
 
     if fulltime is None:
         fulltime = mf / mdot
 
-    timestep = fulltime / 1000
+    timestep = fulltime / ntimestep
 
     with open('Driver.F90', 'r') as fh:
         lines = fh.readlines()
@@ -42,14 +42,14 @@ def isothermal_sphere(mf, T=10):
     
     write_params(mdot=mdot, fulltime=tf, mf=mf)
 
-def tc_write_params(timestep=100, fulltime=None, mf=100):
+def tc_write_params(ntimestep=1000, fulltime=None, mf=100):
 
     if fulltime is None:
         fulltime = mf / mdot
     if fulltime < 2:
         fulltime = 2
 
-    timestep = fulltime / 1000
+    timestep = fulltime / ntimestep
 
     with open('TurbulentCoreDriver.F90', 'r') as fh:
         lines = fh.readlines()
@@ -57,7 +57,9 @@ def tc_write_params(timestep=100, fulltime=None, mf=100):
     with open('TurbulentCoreDriver.F90', 'w') as fh:
 
         for line in lines:
-            if line[4:8] == 'dt =':
+            if line[4:12] == 'mfinal =':
+                fh.write("    mfinal = {0:E}\n".format(mf))
+            elif line[4:8] == 'dt =':
                 fh.write("    dt = {0:f} * secyr\n".format(timestep))
             elif line[4:13] == 'maxtime =':
                 fh.write("    maxtime = {0:E} * secyr\n".format(fulltime))
@@ -67,10 +69,20 @@ def tc_write_params(timestep=100, fulltime=None, mf=100):
 
 if __name__ == "__main__":
 
-    for mdot in [1e-3, 3e-3, 1e-4, 1e-5, 1e-6]:
-        os.system('git checkout 8cb810f -- Driver.F90')
-        write_params(mdot=mdot)
-        compile_code()
-        run_code()
-        shutil.move("protostellar_evolution.txt",
-                    "protostellar_evolution_mdot={0}.txt".format(mdot))
+    if False:
+        for mdot in [1e-3, 3e-3, 1e-4, 1e-5, 1e-6]:
+            os.system('git checkout 8cb810f -- Driver.F90')
+            write_params(mdot=mdot)
+            compile_code()
+            run_code()
+            shutil.move("protostellar_evolution.txt",
+                        "protostellar_evolution_mdot={0}.txt".format(mdot))
+    
+    for mf in (0.1,0.5,1,5,10,50):
+        os.system('git checkout 91c08761d5d6b9bc906c9b4081fc2bcb56405f26 -- TurbulentCoreDriver.F90')
+        tc_write_params(mf=mf)
+        compile_code('turbulentcore')
+        run_code('tc_protostellar_evolution')
+        shutil.move("turbulentcore_protostellar_evolution.txt",
+                    "turbulentcore_protostellar_evolution_mdot={0}.txt".format(mf))
+
