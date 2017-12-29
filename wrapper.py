@@ -129,3 +129,5 @@ if __name__ == "__main__":
         run_code('tc_protostellar_evolution')
         shutil.move("turbulentcore_protostellar_evolution.txt",
                     "turbulentcore_protostellar_evolution_m={0}.txt".format(mf))
+
+    assemble_model_grid()
