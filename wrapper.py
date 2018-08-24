@@ -73,7 +73,7 @@ def tc_write_params(ntimestep=1000, fulltime=None, mf=100):
                 fh.write(line)
 
 def assemble_model_grid(prefix='turbulentcore_protostellar_evolution_m',
-                        masses=(0.1,0.5,1,5,10,50), ntime=1000):
+                        masses=(0.1,0.5,1,5,10,50), ntime=1000, write=False):
 
     from astropy.table import Table
     from astropy.io import fits
@@ -106,7 +106,44 @@ def assemble_model_grid(prefix='turbulentcore_protostellar_evolution_m',
     hdr['COL7'] = 'Total_Luminosity'
     hdr['COL8'] = 'Stage'
 
-    fits.writeto(filename='turbulent_grid.fits', data=grid, header=hdr)
+    gridhdu = fits.PrimaryHDU(data=grid, header=hdr)
+    if write:
+        gridhdu.writeto(filename='turbulent_grid.fits')
+
+    return gridhdu
+
+
+def run_with_params(mf, outfn=None, tfinal=2e6, ntimestep=100, use_cache=True):
+
+    from astropy.table import Table
+
+    curdir = os.getcwd()
+
+    os.chdir(os.path.split(__file__)[0])
+
+    if outfn is None:
+        outfn = "turbulentcore_protostellar_evolution_m={0}.fits".format(mf)
+
+    if not os.path.exists(outfn) or not use_cache:
+
+        os.system('git checkout cc6cf07 -- TurbulentCoreDriver.F90')
+        tc_write_params(mf=mf, fulltime=tfinal, ntimestep=ntimestep)
+        compile_code('turbulentcore')
+        run_code('tc_protostellar_evolution')
+
+        tbl = Table.read("turbulentcore_protostellar_evolution.txt",
+                         format='ascii')
+        tbl.write(outfn)
+
+        #shutil.move("turbulentcore_protostellar_evolution.txt",
+        #            outfn)
+
+    tbl = Table.read(outfn, format='fits')
+
+    os.chdir(curdir)
+
+    return tbl
+    
 
 
 

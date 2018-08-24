@@ -34,7 +34,7 @@ program TurbulentCoreDriver
     star%stage  = 0
 
     ! set the final mass, which determines the accretion rate etc. below
-    mfinal = 5.000000E+01
+    mfinal = 3.050000E-02
 
     ! compute tfinal from mfinal
     mdot1 = 4.9e-6 ! normalized by surface density^3/4
@@ -46,7 +46,7 @@ program TurbulentCoreDriver
     star%mdot = mdot
 
     ! Set the timestep (seconds)
-    dt = 2000.000000 * secyr
+    dt = 10000.000000 * secyr
 
     ! Initialize the simulation time and set the maxtime
     time = 0.0
