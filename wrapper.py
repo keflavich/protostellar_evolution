@@ -39,7 +39,7 @@ def isothermal_sphere(mf, T=10):
     # years
     tf1 = (1/mdot1)
     tf = tf1 * mf
-    
+
     write_params(mdot=mdot, fulltime=tf, mf=mf)
 
 def tc_write_params(ntimestep=1000, fulltime=None, mf=100):
@@ -113,7 +113,7 @@ def assemble_model_grid(prefix='turbulentcore_protostellar_evolution_m',
     return gridhdu
 
 
-def run_with_params(mf, outfn=None, tfinal=2e6, ntimestep=100, use_cache=True):
+def run_tc_with_params(mf, outfn=None, tfinal=2e6, ntimestep=100, use_cache=True):
 
     from astropy.table import Table
 
@@ -143,7 +143,7 @@ def run_with_params(mf, outfn=None, tfinal=2e6, ntimestep=100, use_cache=True):
     os.chdir(curdir)
 
     return tbl
-    
+
 
 
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             run_code()
             shutil.move("protostellar_evolution.txt",
                         "protostellar_evolution_mdot={0}.txt".format(mdot))
-    
+
     for mf in (0.1,0.5,1,5,10,50):
         os.system('git checkout cc6cf07 -- TurbulentCoreDriver.F90')
         tc_write_params(mf=mf, fulltime=2e6)

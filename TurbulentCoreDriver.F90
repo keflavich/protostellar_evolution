@@ -34,7 +34,7 @@ program TurbulentCoreDriver
     star%stage  = 0
 
     ! set the final mass, which determines the accretion rate etc. below
-    mfinal = 3.050000E-02
+    mfinal = 2.906000E+00
 
     ! compute tfinal from mfinal
     mdot1 = 4.9e-6 ! normalized by surface density^3/4
