@@ -6,14 +6,17 @@ subroutine update_stage(mass, md, Ld, Lms, &                    ! Input
   implicit none
   double precision                              :: mass, md, Ld, Lms, n, r
   integer                                       :: stage
-  integer                                       :: models
+  integer, save                                 :: models
   double precision                              :: Rms
   double precision                              :: Dn,Bn
   double precision                              :: rho_avg, rho_c
   double precision                              :: Pc, Tc
   double precision                              :: t1,t2,tol,corepress
-  double precision, dimension(:),   allocatable :: Dns, Bns, ns
-  double precision, dimension(:,:), allocatable :: nDns, nBns
+  ! Lookup table columns: read on the first stage-1 call only and kept
+  ! (SAVE) for later calls, as in get_derived_values
+  double precision, dimension(:),   allocatable, save :: Dns, Bns, ns
+  double precision, dimension(:,:), allocatable, save :: nDns, nBns
+  logical, save                                 :: tables_loaded = .false.
   double precision, parameter                   :: frad = 0.33
   external                                      :: corepress
 
@@ -41,20 +44,23 @@ subroutine update_stage(mass, md, Ld, Lms, &                    ! Input
   ! along the columns to get values needed for our current protostar.
   !*********************************************************************/
   if ( stage .EQ. 1 ) then
-      call getNumModels(models)
-      allocate(ns(models))
-      allocate(Dns(models))
-      allocate(Bns(models))
-      allocate(nDns(2,models))
-      allocate(nBns(2,models))
-      ! Get columns
-      call get_model_table_cols(models,n=ns,Dn=Dns,Bn=Bns)
+      if (.not. tables_loaded) then
+          call getNumModels(models)
+          allocate(ns(models))
+          allocate(Dns(models))
+          allocate(Bns(models))
+          allocate(nDns(2,models))
+          allocate(nBns(2,models))
+          ! Get columns
+          call get_model_table_cols(models,n=ns,Dn=Dns,Bn=Bns)
 
-      ! Prepare arrays
-      nDns(1,:) = ns
-      nDns(2,:) = Dns
-      nBns(1,:) = ns
-      nBns(2,:) = Bns
+          ! Prepare arrays
+          nDns(1,:) = ns
+          nDns(2,:) = Dns
+          nBns(1,:) = ns
+          nBns(2,:) = Bns
+          tables_loaded = .true.
+      endif
 
       ! Interpolate to get values for our current protostar
       call interp2dlin(nDns,shape(nDns),[1.D0,2.D0],ns,2.D0,n,Dn)

@@ -17,14 +17,18 @@ subroutine get_derived_values(stage, mass, mdot, r, n, &             ! Input
    double precision              :: dlogbbc
    double precision, parameter   :: fk = 0.5
    double precision              :: mmdot
-   ! Necessary variables for retrieving beta and dlogbeta
-   integer                                     :: cols
-   integer                                     :: models,nMs,mRows
-   double precision,allocatable,dimension(:)   :: mvec
-   double precision,allocatable,dimension(:)   :: ns
-   double precision,allocatable,dimension(:,:) :: beta_table
-   double precision,allocatable,dimension(:,:) :: dlogbeta_table
-   double precision,allocatable,dimension(:,:) :: dlogbbc_table
+   ! Necessary variables for retrieving beta and dlogbeta.
+   ! The lookup tables are read from disk on the first call only and kept
+   ! (SAVE) for later calls; re-reading them on every call dominated the
+   ! run time.
+   integer, save                                     :: cols
+   integer, save                                     :: models,nMs,mRows
+   double precision,allocatable,dimension(:),   save :: mvec
+   double precision,allocatable,dimension(:),   save :: ns
+   double precision,allocatable,dimension(:,:), save :: beta_table
+   double precision,allocatable,dimension(:,:), save :: dlogbeta_table
+   double precision,allocatable,dimension(:,:), save :: dlogbbc_table
+   logical, save                                     :: tables_loaded = .false.
 
    ! Convert accretion rate from g/s to Msun/yr
    mmdot = mdot * secyr / Msun
@@ -33,18 +37,21 @@ subroutine get_derived_values(stage, mass, mdot, r, n, &             ! Input
    ag    = 3. / (5. - n)
 
    ! Lookup the polytropic beta and dlog(beta)/dlog(m)
-   call getNumModels(models)
-   nMs = 50
-   mRows = nMs - 2
-   cols = models * mRows
-   allocate(beta_table(models,mRows))
-   allocate(dlogbeta_table(models,mRows))
-   allocate(dlogbbc_table(models,mRows))
-   allocate(ns(models))
-   
-   call get_model_table_cols(models,n=ns)
-   call get_beta_table_mvec(mvec)
-   call get_beta_table(cols,models,mRows,beta_table,dlogbeta_table,dlogbbc_table)
+   if (.not. tables_loaded) then
+      call getNumModels(models)
+      nMs = 50
+      mRows = nMs - 2
+      cols = models * mRows
+      allocate(beta_table(models,mRows))
+      allocate(dlogbeta_table(models,mRows))
+      allocate(dlogbbc_table(models,mRows))
+      allocate(ns(models))
+
+      call get_model_table_cols(models,n=ns)
+      call get_beta_table_mvec(mvec)
+      call get_beta_table(cols,models,mRows,beta_table,dlogbeta_table,dlogbbc_table)
+      tables_loaded = .true.
+   endif
 
    ! Interpolate within beta tables to get beta and dlogbeta given our mass and
    ! polytropic index n
